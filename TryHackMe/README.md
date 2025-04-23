@@ -7,9 +7,9 @@ Personal walkthroughs and notes from rooms I've completed on TryHackMe. Each wri
 These are a few that show solid methodology, clean documentation, and full attack paths:
 
 - [Agent Sudo](./agent-sudo.md)
-- [TomGhost](./tomghost.md)
-- [Jack of All Trades](./jack-of-all-trades.md)
 - [Smag Grotto](./smag-grotto.md)
+- [Jack of All Trades](./jack-of-all-trades.md)
+- [Chocolate Factory](./chocolate-factory.md)
 
 ## All Writeups
 
