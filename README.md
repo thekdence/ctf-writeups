@@ -9,9 +9,9 @@ These aren’t just solutions. They show the process, mistakes, dead ends, and t
 These stand out for full chains, clean execution, or strong documentation:
 
 - [Agent Sudo](./TryHackMe/agent-sudo.md)
-- [TomGhost](./TryHackMe/tomghost.md)
-- [Jack of All Trades](./TryHackMe/jack-of-all-trades.md)
 - [Smag Grotto](./TryHackMe/smag-grotto.md)
+- [Jack of All Trades](./TryHackMe/jack-of-all-trades.md)
+- [Chocolate Factory](./TryHackMe/chocolate-factory.md)
 
 ## All Writeups
 
