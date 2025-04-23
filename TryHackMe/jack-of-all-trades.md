@@ -26,13 +26,13 @@ gobuster dir -u http://$IP -w /usr/share/wordlists/dirb/common.txt -x php
 | 22 | HTTP (Apache 2.4.10) |
 | 80 | SSH (OpenSSH 6.7p1 Debian 5) |
 
-Yeah, they flipped the script. Web server on port 22 and SSH on port 80. Firefox lost its mind. Had to go into `about:config` and create a string for `network.security.ports.banned.override`, adding `22`. Classic troll move.
+Flipped the script. Web server on port 22 and SSH on port 80. Firefox lost its mind. Had to go into `about:config` and create a string for `network.security.ports.banned.override`, adding `22`. 
 
 ---
 
 ### Web Enumeration
 
-- Site is for a toymaker named **Jack** — likely a username.
+- Site is for a toymaker named **Jack**, likely a username.
 - Source code of homepage shows:
 
 ```html
@@ -48,20 +48,20 @@ Remember to wish Johny Graves well with his crypto jobhunting! His encoding syst
 
 So now we’ve got two usernames (`jack`, `johny` maybe) and a password: `[REDACTED]`.
 
-Tried it on `/recovery.php` — nothing useful. Checked source code of that page and saw another encoded string:
+Tried it on `/recovery.php`, nothing useful. Checked source code of that page and saw another encoded string:
 
 ```html
 <!-- GQ2T...long base32 string... -->
 ```
 
-- Decoded it: **Base32 → Hex → ROT13** (because they’re assholes). (Looking at this from the future and checking the writeup, if we had done OSINT on Johny Graves we would have found a post about encoding in that order. Keep in mind to dig deeper for next time)
+- Decoded it: **Base32 → Hex → ROT13** (this was annoying). (Looking at this from the future and checking the writeup, if we had done OSINT on Johny Graves we would have found a post about encoding in that order. Keep in mind to dig deeper for next time)
 - Final message:
 
 ```
 Remember that the credentials to the recovery login are hidden on the homepage! I know how forgetful you are, so here's a hint: bit.ly/2TvYQ2S
 ```
 
-- Link redirects to **Stegosauria** Wikipedia page — obvious steganography clue.
+- Link redirects to **Stegosauria** Wikipedia page, which is an obvious steganography clue.
 
 ---
 
